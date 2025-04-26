@@ -1,0 +1,10 @@
+{
+  "calendar_ids": [],
+  "win_x": 100,
+  "win_y": 100,
+  "win_width": 400,
+  "win_height": 320,
+  "transparency": 1.0,
+  "show_console": 0,
+  "exclude_keywords": []
+}

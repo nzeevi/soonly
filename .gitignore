@@ -1,0 +1,15 @@
+credentials.json
+token.json
+events_cache.json
+*.exe
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+*.log
+build/
+dist/
+Soonly.spec
+Soonly_console.spec
+שורות התקנה.txt
+config.json
