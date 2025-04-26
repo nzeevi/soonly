@@ -1,3 +1,4 @@
+![Soonly Logo](soonly.png)
 
 # 📅 Soonly – ספירה לאחור לפגישה הקרובה
 
