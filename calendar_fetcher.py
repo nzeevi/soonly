@@ -6,40 +6,43 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from dateutil import parser
 
-SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
-CONFIG_FILE = 'config.json'
+SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
+CONFIG_FILE = "config.json"
 
 
 # Load / Save calendar IDs
 def load_calendar_ids():
     if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
             config = json.load(f)
-            return config.get('calendar_ids', [])
+            return config.get("calendar_ids", [])
     return []
+
 
 def save_calendar_ids(calendar_ids):
     config = {}
     if os.path.exists(CONFIG_FILE):
         try:
-            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                 config = json.load(f)
         except:
             pass  # במידה והקובץ פגום – מתחילים מחדש
-    config['calendar_ids'] = calendar_ids
-    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+    config["calendar_ids"] = calendar_ids
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(config, f, ensure_ascii=False, indent=2)
+
 
 # Load keywords to exclude from events
 def load_excluded_keywords():
     if os.path.exists(CONFIG_FILE):
         try:
-            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                 config = json.load(f)
                 return config.get("exclude_keywords", [])
         except:
             pass
     return []
+
 
 def should_exclude_event(summary):
     if not summary:
@@ -48,17 +51,16 @@ def should_exclude_event(summary):
     return summary in excluded
 
 
-
 # Authenticate with Google account
 def get_credentials():
     creds = None
 
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    if os.path.exists("token.json"):
+        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
     else:
-        flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+        flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
         creds = flow.run_local_server(port=0)
-        with open('token.json', 'w') as token:
+        with open("token.json", "w") as token:
             token.write(creds.to_json())
 
     return creds
@@ -67,15 +69,15 @@ def get_credentials():
 # Fetch list of available calendars
 def get_calendar_list():
     creds = get_credentials()
-    service = build('calendar', 'v3', credentials=creds)
+    service = build("calendar", "v3", credentials=creds)
 
     calendars_result = service.calendarList().list().execute()
-    calendars = calendars_result.get('items', [])
+    calendars = calendars_result.get("items", [])
 
     calendar_choices = {}
     for cal in calendars:
-        name = cal.get('summary', '(ללא שם)')
-        cal_id = cal.get('id')
+        name = cal.get("summary", "(ללא שם)")
+        cal_id = cal.get("id")
         calendar_choices[name] = cal_id
 
     return calendar_choices
@@ -84,6 +86,7 @@ def get_calendar_list():
 # Interactive calendar selection
 import tkinter as tk
 from tkinter import messagebox
+
 
 def choose_calendars():
     calendars = get_calendar_list()
@@ -94,7 +97,9 @@ def choose_calendars():
     def confirm_selection():
         selected = [calendar_ids[i] for i in listbox.curselection()]
         if not selected:
-            messagebox.showwarning("Empty selection", "Please select at least one calendar.")
+            messagebox.showwarning(
+                "Empty selection", "Please select at least one calendar."
+            )
             return
         # Save immediately on confirmation
         save_calendar_ids(selected)
@@ -122,12 +127,15 @@ def choose_calendars():
     if ids:
         return ids
     else:
-        messagebox.showerror("Error", "No calendars were selected. Please restart the application.")
+        messagebox.showerror(
+            "Error", "No calendars were selected. Please restart the application."
+        )
         exit(1)
+
 
 def get_upcoming_events(count=10):
     creds = get_credentials()
-    service = build('calendar', 'v3', credentials=creds)
+    service = build("calendar", "v3", credentials=creds)
 
     calendar_ids = load_calendar_ids()
     if not calendar_ids:
@@ -139,22 +147,26 @@ def get_upcoming_events(count=10):
 
     for calendar_id in calendar_ids:
         try:
-            events_result = service.events().list(
-                calendarId=calendar_id,
-                timeMin=now_str,
-                maxResults=10,
-                singleEvents=True,
-                orderBy='startTime'
-            ).execute()
+            events_result = (
+                service.events()
+                .list(
+                    calendarId=calendar_id,
+                    timeMin=now_str,
+                    maxResults=10,
+                    singleEvents=True,
+                    orderBy="startTime",
+                )
+                .execute()
+            )
 
-            events = events_result.get('items', [])
+            events = events_result.get("items", [])
             for event in events:
-                summary = event.get('summary', '')
+                summary = event.get("summary", "")
                 if should_exclude_event(summary):
                     continue
 
-                start_str = event['start'].get('dateTime', event['start'].get('date'))
-                end_str = event['end'].get('dateTime', event['end'].get('date'))
+                start_str = event["start"].get("dateTime", event["start"].get("date"))
+                end_str = event["end"].get("dateTime", event["end"].get("date"))
 
                 try:
                     end_dt = parser.parse(end_str)
@@ -164,11 +176,17 @@ def get_upcoming_events(count=10):
                     continue
 
                 if end_dt > now:
-                    all_events.append({
-                        'summary': summary if summary else '(\u05dc\u05dc\u05d0 \u05e9\u05dd)',
-                        'start': start_str,
-                        'end': end_str
-                    })
+                    all_events.append(
+                        {
+                            "summary": (
+                                summary
+                                if summary
+                                else "(\u05dc\u05dc\u05d0 \u05e9\u05dd)"
+                            ),
+                            "start": start_str,
+                            "end": end_str,
+                        }
+                    )
 
         except Exception as e:
             print(f"Error in calendar {calendar_id}: {e}")
@@ -176,6 +194,6 @@ def get_upcoming_events(count=10):
     if not all_events:
         return []
 
-    all_events.sort(key=lambda e: parser.parse(e['start']).astimezone(timezone.utc))
+    all_events.sort(key=lambda e: parser.parse(e["start"]).astimezone(timezone.utc))
 
     return all_events[:count]
