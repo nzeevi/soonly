@@ -56,6 +56,11 @@ class ConfigManager:
     def get_excluded_titles():
         return ConfigManager.load().get("excluded_titles", [])
 
+    @staticmethod
+    def get_replace_rules():
+        return ConfigManager.load().get("replace_rules", [])
+
+
 class CacheManager:
     @staticmethod
     # Load events from cache file
@@ -85,6 +90,16 @@ class CacheManager:
         with open(CACHE_FILE, "w", encoding="utf-8") as f:
             f.write(f"# Cached at {datetime.now().isoformat()}\n")
             json.dump(data, f, ensure_ascii=False, indent=2)
+
+def apply_replacements(text):
+    rules = ConfigManager.get_replace_rules()
+    for rule in rules:
+        from_text = rule.get("from")
+        to_text = rule.get("to")
+        if from_text and to_text:
+            text = text.replace(from_text, to_text)
+    return text
+
 
 class EventWidget:
     # Initialize GUI and main loop
@@ -215,6 +230,8 @@ class EventWidget:
             title = event['summary'].strip() if 'summary' in event else "(ללא כותרת)"
             if title in excluded_titles:
                 continue
+            title = apply_replacements(title)
+
 
             start = parser.parse(event['start'])
             end = parser.parse(event['end'])
