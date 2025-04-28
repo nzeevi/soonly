@@ -13,3 +13,4 @@ Soonly.spec
 Soonly_console.spec
 שורות התקנה.txt
 config.json
+*.spec
